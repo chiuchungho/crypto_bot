@@ -1,8 +1,17 @@
 {
   "dependencies": {
+    "ansicolor": "^1.1.93",
     "axios": "^0.21.1",
-    "ccxt": "^1.42.20",
+    "ccxt": "^1.48.90",
+    "crypto": "^1.0.1",
+    "fs": "^0.0.1-security",
     "ololog": "^1.1.164",
-    "ws": "^7.4.3"
+    "open": "^8.0.6",
+    "path": "^0.12.7",
+    "sqlite3": "^5.0.2",
+    "ws": "^7.4.5"
+  },
+  "scripts": {
+    "start": "node app.js"
   }
 }

@@ -1,7 +1,16 @@
-'use strict'
+"use strict";
 
-const ccxt = require('ccxt')
+const ccxtpro = require('./ccxt.pro/ccxt.pro')
+const ccxt  = require('ccxt')
 const log = require('ololog')
+const fs    = require('fs')
+const path  = require('path')
+const ansi  = require ('ansicolor').nice
+const sqlite3 = require('sqlite3').verbose();
+const open  = require('open')
+const ws    = require('ws')
+const crypto = require('crypto')
+const { ExchangeError, NetworkError } = ccxtpro
 
 const symbol = ['ETH-PERP', 'ETH/USD']
 const exchanges = ['ftx']
@@ -12,7 +21,7 @@ const limit = 10
 let fee;
 let balance;
 
-const exchange = new ccxt.ftx({
+const exchange = new ccxtpro.ftx({
     apiKey: '',
     secret: '',
     subaccountName: 'HoSub',
