@@ -13,26 +13,35 @@ const crypto = require('crypto')
 const { ExchangeError, NetworkError } = ccxtpro
 const APIcredential = require ('./credential.json')
 const symbol = ['ETH-PERP', 'ETH/USD']
-const exchanges = ['ftx']
+
 const ftxSymbol = 'ETH-PERP'
 const binanceSymbol = 'ETH/USD'
 
 const limit = 10
 let fee;
 let balance;
+let exchanges = {
+    ftx: new ccxtpro.ftx(),
+    binance: new ccxtpro.ftx()
+}
 
-const exchange = new ccxtpro.ftx({
+exchanges.ftx = new ccxtpro.ftx({
     apiKey: APIcredential.ftx.apiKey,
     secret: APIcredential.ftx.secret,
-    subaccountName: 'HoSub',
     enableRateLimit: true,
-    rateLimit: 35
+    rateLimit: 10
+});
 
+exchanges.binance = new ccxtpro.binance({
+    apiKey: APIcredential.binance.apiKey,
+    secret: APIcredential.binance.secret,
+    enableRateLimit: true,
+    rateLimit: 10
 });
 
 async function updateBalance() {
     console.log('updateBalance');
-    balance = await exchange.fetchBalance();
+    balance = await exchanges['ftx'].fetchBalance();
     console.log(balance)
 //     { info: { result: [ [Object], [Object] ], success: true },
 //   USD: { free: 0, used: 1742.75055516, total: 1742.75055516 },
@@ -45,7 +54,7 @@ updateBalance()
 
 async function updateFundingRate() {
     console.log('get funding rate');
-    fee = await exchange.publicGetFundingRates()
+    fee = await exchanges['ftx'].publicGetFundingRates()
     console.log(fee)
 }
 
