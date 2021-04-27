@@ -11,7 +11,7 @@ const open  = require('open')
 const ws    = require('ws')
 const crypto = require('crypto')
 const { ExchangeError, NetworkError } = ccxtpro
-
+const APIcredential = require ('./credential.json')
 const symbol = ['ETH-PERP', 'ETH/USD']
 const exchanges = ['ftx']
 const ftxSymbol = 'ETH-PERP'
@@ -22,8 +22,8 @@ let fee;
 let balance;
 
 const exchange = new ccxtpro.ftx({
-    apiKey: '',
-    secret: '',
+    apiKey: APIcredential.ftx.apiKey,
+    secret: APIcredential.ftx.secret,
     subaccountName: 'HoSub',
     enableRateLimit: true,
     rateLimit: 35
