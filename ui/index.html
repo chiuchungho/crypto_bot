@@ -1,0 +1,144 @@
+<html>
+<!DOCTYPE html>
+  <meta charset="utf-8" />
+  <title>WebSocket Test</title>
+  <link href="https://unpkg.com/tabulator-tables@4.1.4/dist/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.1.4/dist/js/tabulator.min.js"></script>
+
+
+
+  <script language="javascript" type="text/javascript">
+
+  var wsUri = "ws://localhost:8080/";
+  var output;
+  var websocket
+
+  function init()
+  {
+    output = document.getElementById("output");
+    testWebSocket();
+  }
+
+  function testWebSocket()
+  {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+  }
+
+  function onOpen(evt)
+  {
+    writeToScreen("CONNECTED");
+    doSend("WebSocket rocks");
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+    window.close()
+    open(location, '_self').close();
+    self.close()
+  }
+
+  function onMessage(evt)
+  {
+  	try{
+    	e=(JSON.parse(evt.data))
+      console.log(e)
+      if(e.action=="get_position"){
+        generateTable("#positionTable",e.data)
+      }
+    }catch(e){
+    	// Not JSON
+    }
+    
+  }
+
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    writeToScreen("SENT: " + message);
+    try{
+      message=JSON.stringify(message)
+    }catch(e){
+      // Not JSON
+    }
+    websocket.send(message);
+  }
+
+
+  function dualOrderClose(market){
+    var marketParam={
+      "TRX": {
+        "baseMarket": "TRX-PERP",
+        "quoteMarket": "TRX/USD",
+        "quoteSize": 5000
+      },
+      "TRXopen": {
+        "baseMarket": "TRX/USD",
+        "quoteMarket": "TRX-PERP",
+        "quoteSize": 5000
+      },
+      "LINK": {
+        "baseMarket": "LINK-PERP",
+        "quoteMarket": "LINK/USD",
+        "quoteSize": 15
+      }
+    }
+    if(typeof marketParam[market]!="undefined"){
+      doSend({action:"place_order",data:{ "market": marketParam[market]['baseMarket'], "price":null, "side": "buy", "type": "market", "size": marketParam[market]['quoteSize'], "reduceOnly": false, "ioc": false, "postOnly": false}})
+      doSend({action:"place_order",data:{ "market": marketParam[market]['quoteMarket'], "price":null, "side": "sell", "type": "market", "size": marketParam[market]['quoteSize'], "reduceOnly": false, "ioc": false, "postOnly": false}})  
+    }
+  }
+
+  function writeToScreen(message)
+  {
+  	console.log(message)
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.appendChild(pre);
+  }
+
+  function generateTable(tableID,tabledata){
+
+
+  var table = new Tabulator(tableID, {
+    data:tabledata, //load initial data into table
+    layout:"fitColumns", //fit columns to width of table (optional)
+    columns:[ //Define Table Columns
+      {title:"Market", field:"future", sorter:"string"},
+      {title:"Net Size", field:"netSize", sorter:"number"},
+      {title:"Collateral", field:"collateralUsed", sorter:"number"},
+    ],
+      rowClick:function(e, row){ //trigger an alert message when the row is clicked
+        alert("Row " + row.getIndex() + " Clicked!!!!");
+      },
+  });
+  }
+
+  window.addEventListener("load", init, false);
+
+  </script>
+
+<body>
+  <h2>WebSocket Test</h2>
+
+  <div id="output">
+  </div>
+
+  <div id="positionTable">
+
+  </div>
+
+<button onclick='doSend({action:"dump_orderbook"})'>Get orderbook data (console)</button>
+
+
+</body>
+</html>

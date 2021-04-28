@@ -8,7 +8,7 @@ const path  = require('path')
 const ansi  = require ('ansicolor').nice
 const sqlite3 = require('sqlite3').verbose();
 const open  = require('open')
-const ws    = require('ws')
+const WebSocket    = require('ws')
 const crypto = require('crypto')
 const { ExchangeError, NetworkError } = ccxtpro
 const APIcredential = require ('./config/credential.json')
@@ -17,16 +17,42 @@ const ftxSymbol = 'ETH-PERP'
 const binanceSymbol = 'ETH/USD'
 const limit = 10;
 
-
+//Web UI server
 const http = require('http'); // 1 - 載入 Node.js 原生模組 http
 const server = http.createServer(function (req, res) {   // 2 - 建立server
   res.writeHead(200, { 'content-type': 'text/html' })
-  fs.createReadStream('index.html').pipe(res)
+  fs.createReadStream('ui/index.html').pipe(res)
 });
  
 server.listen(80); //3 - 進入此網站的監聽 port, 就是 localhost:xxxx 的 xxxx
  
+//Websocket Server
+const clientWs = new WebSocket.Server({ port: 8080 });
 
+clientWs.on('connection', async function connection(ws) {
+    ws.on('message', async function incoming(msg) {
+        msg=JSON.parse(msg)
+        console.log('received');
+        console.log(msg)
+
+        if(msg.action=='vwap'){
+            console.log('Get vwap price')
+            ws.send(JSON.stringify({action:msg.action,data:vwap(msg.exchangeID,msg.instrument,msg.size)}))
+        }
+        if(msg.action=='dump_orderbook'){
+            console.log('Dump Orderbook State')
+            ws.send(JSON.stringify({action:msg.action,data:orderbook}))
+        }
+    })
+})
+
+
+function clientSend(data,action){
+	console.log('emit to client')
+	clientWs.clients.forEach(function each(client) {
+	   client.send(JSON.stringify({action:action,data:data}));
+	});
+}
 
 let orderbook = {
     ftx: {},
@@ -40,7 +66,13 @@ let balance = {
     ftx: {},
     binance: {}
 }
+let exposure = {
+    
+}
+let activeOrder={} //orderID format exchangeID_orderID
 let execution = []
+
+
 
 
 let fee;
@@ -92,7 +124,7 @@ async function subscribeOrderbook(exchangeID,symbol,limit){
     orderbook[exchangeID][symbol]=null
     while (true) {
         let result = await exchanges[exchangeID].watchOrderBook (symbol)
-        result.timestamp=new Date().getTime();
+        if(!result.timestamp){result.timestamp=new Date().getTime();}
         orderbook[exchangeID][symbol] = result
         orderbookEventCallback(exchangeID,symbol)
         console.log (exchangeID,new Date (), result['asks'][0], result['bids'][0])
@@ -107,7 +139,7 @@ async function subscribeTicker(exchangeID,symbol){
     ticker[exchangeID][symbol]=null
     while (true) {
         let result = await exchanges[exchangeID].watchTicker (symbol)
-        result.timestamp=new Date().getTime();
+        if(!result.timestamp){result.timestamp=new Date().getTime();}
         ticker[exchangeID][symbol]=result
         tickerEventCallback(exchangeID,symbol)
         console.log (new Date (), ticker)
@@ -131,17 +163,17 @@ let executionEventCallback = function(execution){}
 
 //subscribeBalance('binance')
 async function subscribeBalance(exchangeID){
-    balance[exchangID]=null
+    balance[exchangeID]=null
     if (exchanges[exchangeID].has['watchBalance']) {
         while (true) {
-            balance[exchangID] = await exchanges[exchangeID].watchBalance()
+            balance[exchangeID] = await exchanges[exchangeID].watchBalance()
             balanceEventCallback(exchangeID)
             //console.log (new Date (), balance)
         }
     }else{
         console.log('watch balance not available for '+exchangeID+'. Using poll instead')
         while (true){
-            balance[exchangID] = await exchanges[exchangeID].fetchBalance()
+            balance[exchangeID] = await exchanges[exchangeID].fetchBalance()
             balanceEventCallback(exchangeID)
             await exchanges[exchangeID].sleep (3000) // wait 3 second
 
@@ -151,3 +183,19 @@ async function subscribeBalance(exchangeID){
 }
 let balanceEventCallback = function(execution){}
 
+
+function vwap(exchangeID,symbol,size){
+	var direction=size>0?'asks':'bids';
+	var sizeRemaining=Math.abs(size);
+	var vwapProduct=0
+	for (var i=0;i<orderbook[exchangeID][symbol][direction].length&&sizeRemaining!=0;i++){
+		var sizeToBuy=sizeRemaining<orderbook[exchangeID][symbol][direction][i][1]?sizeRemaining:orderbook[exchangeID][symbol][direction][i][1]
+		vwapProduct+=sizeToBuy*orderbook[exchangeID][symbol][direction][i][0]
+		sizeRemaining-=sizeToBuy
+	}
+	if(sizeRemaining>0){
+		console.error('Insufficient Liquidity')
+		return 0
+	}
+	return vwapProduct/Math.abs(size)
+}
