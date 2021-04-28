@@ -41,8 +41,9 @@ flow:
   1. compare the price, if price difference less than 0.1%, start convert back to USD
 
 ##### Biz Logic level
-* `findPair`
 * `balance`
+* `findPair`
+* `checkHolding`
 * `execution`
 
 ##### Connection Level
