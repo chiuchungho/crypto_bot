@@ -22,9 +22,9 @@ exchanges.binance = new ccxtpro.binance({
 
 const ccxtWebscoket = {
 
+    orderbook: [exchangeID][symbol]=null,
     //subscribeOrderbook('binance','ETH/BTC')
     async subscribeOrderbook(exchangeID,symbol,limit){
-        orderbook[exchangeID][symbol]=null
         while (true) {
             let result = await exchanges[exchangeID].watchOrderBook (symbol)
             if(!result.timestamp){result.timestamp=new Date().getTime();}
@@ -39,62 +39,57 @@ const ccxtWebscoket = {
 
     },
 
+    ticker: [exchangeID][symbol]=null,
     //subscribeTicker('binance','ETH/BTC')
-async subscribeTicker(exchangeID,symbol){
-    ticker[exchangeID][symbol]=null
-    while (true) {
-        let result = await exchanges[exchangeID].watchTicker (symbol)
-        if(!result.timestamp){result.timestamp=new Date().getTime();}
-        ticker[exchangeID][symbol]=result
-        tickerEventCallback(exchangeID,symbol)
-        console.log (new Date (), ticker)
-    }
-    return new Promise();
-},
-
-tickerEventCallback(exchangeID, symbol){},
-
-//subscribeExecution('binance','ETH/BTC')
-async subscribeExecution(exchangeID,symbol){
-    while (true) {
-        const exec = await exchanges[exchangeID].watchMyTrades(symbol)
-        exec.exchangeID=exchangeID
-        execution.push(exec)
-        executionEventCallback(execution)
-        //console.log (new Date (), exec)
-    }
-    return new Promise();
-},
-
-executionEventCallback(execution){},
-
-//subscribeBalance('binance')
-async subscribeBalance(exchangeID){
-    balance[exchangeID]=null
-    if (exchanges[exchangeID].has['watchBalance']) {
+    async subscribeTicker(exchangeID,symbol){
         while (true) {
-            balance[exchangeID] = await exchanges[exchangeID].watchBalance()
-            balanceEventCallback(exchangeID)
-            //console.log (new Date (), balance)
+            let result = await exchanges[exchangeID].watchTicker (symbol)
+            if(!result.timestamp){result.timestamp=new Date().getTime();}
+            ticker[exchangeID][symbol]=result
+            tickerEventCallback(exchangeID,symbol)
+            console.log (new Date (), ticker)
         }
-    }else{
-        console.log('watch balance not available for '+exchangeID+'. Using poll instead')
-        while (true){
-            balance[exchangeID] = await exchanges[exchangeID].fetchBalance()
-            balanceEventCallback(exchangeID)
-            await exchanges[exchangeID].sleep (3000) // wait 3 second
+        return new Promise();
+    },
 
+    tickerEventCallback(exchangeID, symbol){},
+
+    //subscribeExecution('binance','ETH/BTC')
+    async subscribeExecution(exchangeID,symbol){
+        while (true) {
+            const exec = await exchanges[exchangeID].watchMyTrades(symbol)
+            exec.exchangeID=exchangeID
+            execution.push(exec)
+            executionEventCallback(execution)
+            //console.log (new Date (), exec)
         }
-    }
-    return new Promise();
-},
+        return new Promise();
+    },
 
-balanceEventCallback(execution){},
-    
+    executionEventCallback(execution){},
 
-    
+    balance: [exchangeID]=null,
+    //subscribeBalance('binance')
+    async subscribeBalance(exchangeID){
+        if (exchanges[exchangeID].has['watchBalance']) {
+            while (true) {
+                balance[exchangeID] = await exchanges[exchangeID].watchBalance()
+                balanceEventCallback(exchangeID)
+                //console.log (new Date (), balance)
+            }
+        }else{
+            console.log('watch balance not available for '+exchangeID+'. Using poll instead')
+            while (true){
+                balance[exchangeID] = await exchanges[exchangeID].fetchBalance()
+                balanceEventCallback(exchangeID)
+                await exchanges[exchangeID].sleep (3000) // wait 3 second
 
+            }
+        }
+        return new Promise();
+    },
 
+    balanceEventCallback(execution){},
 }
 
 
