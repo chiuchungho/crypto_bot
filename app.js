@@ -109,7 +109,7 @@ updateFundingRate();
 var initWS = new ccxtWebscoket();
 
 initWS.subscribeOrderbook('binance','ETH/BTC')
-orderbook.ftx = initWS.orderbook;
+orderbook.binance = initWS.orderbook;
 
 // //subscribeOrderbook('binance','ETH/BTC')
 // async function subscribeOrderbook(exchangeID,symbol,limit){
