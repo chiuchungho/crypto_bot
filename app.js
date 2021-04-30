@@ -17,7 +17,7 @@ const ftxSymbol = 'ETH-PERP'
 const binanceSymbol = 'ETH/USD'
 const limit = 10;
 
-const ccxtWebscoket = require('./connection/ccxtWebscoket')
+const ccxtWebscoket = require('./src/connection/ccxtWebscoket')
 
 //Web UI server
 const http = require('http'); // 1 - 載入 Node.js 原生模組 http
