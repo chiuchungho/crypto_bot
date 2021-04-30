@@ -12,6 +12,8 @@ const WebSocket    = require('ws')
 const crypto = require('crypto')
 const { ExchangeError, NetworkError } = ccxtpro
 const APIcredential = require ('./config/credential.json')
+
+
 const symbol = ['ETH-PERP', 'ETH/USD']
 const ftxSymbol = 'ETH-PERP'
 const binanceSymbol = 'ETH/USD'
@@ -104,12 +106,6 @@ async function updateFundingRate() {
 }
 updateFundingRate();
 // setInterval(updateBalance, 10 * 1000);
-
-//new
-var initWS = new ccxtWebscoket();
-
-initWS.subscribeOrderbook('binance','ETH/BTC')
-orderbook.binance = initWS.orderbook;
 
 // //subscribeOrderbook('binance','ETH/BTC')
 // async function subscribeOrderbook(exchangeID,symbol,limit){
