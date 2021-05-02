@@ -4,11 +4,14 @@ const TradeModel = require('../model/tradeModel')
 const ExchangeWithKey = require('./exhangeWithKey')
 
 class CcxtWebscoket{
-    constructor(){
-        this.orderbook;
-        this.ticker;
-        this.balance;
-    }
+    //=================================
+    // local variable is not needed anymore
+    //=================================
+    // constructor(){
+    //     this.orderbook;
+    //     this.ticker;
+    //     this.balance;
+    // }
     //subscribeOrderbook('binance','ETH/BTC')
     async subscribeOrderbook(exchangeID,symbol,limit){
         while (true) {
