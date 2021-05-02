@@ -32,15 +32,15 @@ class CcxtWebscoket{
             let result = await exchanges[exchangeID].watchOrderBook (symbol)
             if(!result.timestamp){result.timestamp=new Date().getTime();}
             this.orderbook = result
-            this.aListener("listening!")
+            this.emitOrderbookMessage("order_event", "data123")
             // orderbookEventCallback(exchangeID,symbol)
             // console.log (exchangeID,new Date (), this.orderbook['asks'][0], this.orderbook['bids'][0])
         }
     }
 
-    aListener(val) {}
-    registerListener(listener) {
-        this.aListener = listener;
+    emitOrderbookMessage(event, data) {}
+    registerOrderbookListener(listener) {
+        this.emitOrderbookMessage = listener;
     }
 
 
