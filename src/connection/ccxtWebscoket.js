@@ -45,7 +45,7 @@ class CcxtWebscoket{
         while (true) {
             let result = await ExchangeWithKey.exchanges[exchangeID].watchTicker (symbol)
             if(!result.timestamp){result.timestamp=new Date().getTime();}
-            this.ticker=result
+            TradeModel.ticker[exchangeID][symbol]=result
             this.tickerEventCallback(exchangeID,symbol)
             // console.log (new Date (), ticker)
         }
@@ -95,16 +95,16 @@ class CcxtWebscoket{
     async subscribeBalance(exchangeID){
         if (exchanges[exchangeID].has['watchBalance']) {
             while (true) {
-                this.balance = await ExchangeWithKey.exchanges[exchangeID].watchBalance()
+                TradeModel.balance[exchangeID] = await ExchangeWithKey.exchanges[exchangeID].watchBalance()
                 this.balanceEventCallback(exchangeID)
                 //console.log (new Date (), balance)
             }
         }else{
             console.log('watch balance not available for '+exchangeID+'. Using poll instead')
             while (true){
-                this.balance = await ExchangeWithKey.exchanges[exchangeID].fetchBalance()
+                TradeModel.balance[exchangeID]= await ExchangeWithKey.exchanges[exchangeID].fetchBalance()
                 this.balanceEventCallback(exchangeID)
-                await exchanges[exchangeID].sleep (3000) // wait 3 second
+                await ExchangeWithKey.exchanges[exchangeID].sleep (3000) // wait 3 second
 
             }
         }
