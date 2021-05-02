@@ -10,8 +10,12 @@ const CcxtWebscoket = require('../src/connection/ccxtWebscoket')
 let ccxtWebscoket = new CcxtWebscoket();
 ccxtWebscoket.subscribeOrderbook('binance','ETH/BTC')
 
-function printLog(){
-    console.log (ccxtWebscoket.orderbook['asks'][0], ccxtWebscoket.orderbook['bids'][0]);
-}
+ccxtWebscoket.registerListener(function(val) {
+    console.log("msg: " + val);
+  });
 
-setInterval(printLog,5 * 1000)
+// function printLog(){
+//     console.log (ccxtWebscoket.orderbook['asks'][0], ccxtWebscoket.orderbook['bids'][0]);
+// }
+
+// setInterval(printLog,5 * 1000)

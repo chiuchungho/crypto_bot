@@ -26,17 +26,21 @@ class CcxtWebscoket{
         this.ticker;
         this.balance;
     }
-
     //subscribeOrderbook('binance','ETH/BTC')
     async subscribeOrderbook(exchangeID,symbol,limit){
-        let orderbook
         while (true) {
             let result = await exchanges[exchangeID].watchOrderBook (symbol)
             if(!result.timestamp){result.timestamp=new Date().getTime();}
             this.orderbook = result
+            this.aListener("listening!")
             // orderbookEventCallback(exchangeID,symbol)
             // console.log (exchangeID,new Date (), this.orderbook['asks'][0], this.orderbook['bids'][0])
         }
+    }
+
+    aListener(val) {}
+    registerListener(listener) {
+        this.aListener = listener;
     }
 
 
