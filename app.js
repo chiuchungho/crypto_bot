@@ -12,6 +12,7 @@ const WebSocket    = require('ws')
 const crypto = require('crypto')
 const { ExchangeError, NetworkError } = ccxtpro
 const APIcredential = require ('./config/credential.json')
+const Calculation =require('./src/strategy/calculation')
 
 
 const symbol = ['ETH-PERP', 'ETH/USD']
@@ -41,7 +42,7 @@ clientWs.on('connection', async function connection(ws) {
 
         if(msg.action=='vwap'){
             console.log('Get vwap price')
-            ws.send(JSON.stringify({action:msg.action,data:vwap(msg.exchangeID,msg.instrument,msg.size)}))
+            ws.send(JSON.stringify({action:msg.action,data:Calculation.vwap(msg.exchangeID,msg.instrument,msg.size)}))
         }
         if(msg.action=='dump_orderbook'){
             console.log('Dump Orderbook State')
@@ -58,53 +59,71 @@ function clientSend(data,action){
 	});
 }
 
-let orderbook = {
-    ftx: {},
-    binance: {}
-}
-let ticker = {
-    ftx: {},
-    binance: {}
-}
-let balance = {
-    ftx: {},
-    binance: {}
-}
-let exposure = {
+
+
+
+
+
+
+
+
+//================================================================
+// above code are all modularized into diferent package
+//all depreciated 
+//================================================================
+
+
+
+
+
+
+// let orderbook = {
+//     ftx: {},
+//     binance: {}
+// }
+// let ticker = {
+//     ftx: {},
+//     binance: {}
+// }
+// let balance = {
+//     ftx: {},
+//     binance: {}
+// }
+// let exposure = {
     
-}
-let activeOrder={} //orderID format exchangeID_orderID
-let execution = []
+// }
+// let activeOrder={} //orderID format exchangeID_orderID
+// let execution = []
 
 
 
 
-let fee;
-let exchanges = {
-    ftx: new ccxtpro.ftx(),
-    binance: new ccxtpro.binance()
-}
+// let fee;
+// let exchanges = {
+//     ftx: new ccxtpro.ftx(),
+//     binance: new ccxtpro.binance()
+// }
 
-exchanges.ftx = new ccxtpro.ftx({
-    apiKey: APIcredential.ftx.apiKey,
-    secret: APIcredential.ftx.secret,
-    enableRateLimit: true,
-    rateLimit: 10
-});
+// exchanges.ftx = new ccxtpro.ftx({
+//     apiKey: APIcredential.ftx.apiKey,
+//     secret: APIcredential.ftx.secret,
+//     enableRateLimit: true,
+//     rateLimit: 10
+// });
 
-exchanges.binance = new ccxtpro.binance({
-    apiKey: APIcredential.binance.apiKey,
-    secret: APIcredential.binance.secret,
-    enableRateLimit: true,
-    rateLimit: 10
-});
+// exchanges.binance = new ccxtpro.binance({
+//     apiKey: APIcredential.binance.apiKey,
+//     secret: APIcredential.binance.secret,
+//     enableRateLimit: true,
+//     rateLimit: 10
+// });
 
-async function updateFundingRate() {
-    console.log('get funding rate');
-    fee = await exchanges['ftx'].publicGetFundingRates()
-    console.log(fee)
-}
-updateFundingRate();
+// async function updateFundingRate() {
+//     console.log('get funding rate');
+//     fee = await exchanges['ftx'].publicGetFundingRates()
+//     console.log(fee)
+// }
+// updateFundingRate();
 // setInterval(updateBalance, 10 * 1000);
 
 // //subscribeOrderbook('binance','ETH/BTC')
@@ -172,18 +191,18 @@ updateFundingRate();
 // let balanceEventCallback = function(execution){}
 
 
-function vwap(exchangeID,symbol,size){
-	var direction=size>0?'asks':'bids';
-	var sizeRemaining=Math.abs(size);
-	var vwapProduct=0
-	for (var i=0;i<orderbook[exchangeID][symbol][direction].length&&sizeRemaining!=0;i++){
-		var sizeToBuy=sizeRemaining<orderbook[exchangeID][symbol][direction][i][1]?sizeRemaining:orderbook[exchangeID][symbol][direction][i][1]
-		vwapProduct+=sizeToBuy*orderbook[exchangeID][symbol][direction][i][0]
-		sizeRemaining-=sizeToBuy
-	}
-	if(sizeRemaining>0){
-		console.error('Insufficient Liquidity')
-		return 0
-	}
-	return vwapProduct/Math.abs(size)
-}
+// function vwap(exchangeID,symbol,size){
+// 	var direction=size>0?'asks':'bids';
+// 	var sizeRemaining=Math.abs(size);
+// 	var vwapProduct=0
+// 	for (var i=0;i<orderbook[exchangeID][symbol][direction].length&&sizeRemaining!=0;i++){
+// 		var sizeToBuy=sizeRemaining<orderbook[exchangeID][symbol][direction][i][1]?sizeRemaining:orderbook[exchangeID][symbol][direction][i][1]
+// 		vwapProduct+=sizeToBuy*orderbook[exchangeID][symbol][direction][i][0]
+// 		sizeRemaining-=sizeToBuy
+// 	}
+// 	if(sizeRemaining>0){
+// 		console.error('Insufficient Liquidity')
+// 		return 0
+// 	}
+// 	return vwapProduct/Math.abs(size)
+// }

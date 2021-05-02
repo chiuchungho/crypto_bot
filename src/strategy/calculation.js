@@ -1,6 +1,6 @@
 class Calculation{
 
-    vwap(orderbook,exchangeID,symbol,size){
+    static vwap(orderbook,exchangeID,symbol,size){
         var direction=size>0?'asks':'bids';
         var sizeRemaining=Math.abs(size);
         var vwapProduct=0
