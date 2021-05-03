@@ -11,13 +11,18 @@ const TradeModel = require('../src/model/tradeModel')
 let exchangeID = 'binance'
 let symbol = 'ETH/BTC'
 
-let ccxtWebscoket = new CcxtWebscoket();
-ccxtWebscoket.subscribeOrderbook('binance',symbol)
-ccxtWebscoket.subscribeOrderbook('ftx',symbol)
+let binanceWebscoket = new CcxtWebscoket();
+binanceWebscoket.subscribeOrderbook('binance',symbol)
 
-ccxtWebscoket.registerOrderbookListener(function(event, data) {
-    console.log("event: " + event + " data: "+ data);
-  });
+// ccxtWebscoket.registerOrderbookListener(function(event, data) {
+//     console.log("event: " + event + " data: "+ data);
+//   });
+
+//need to use new objet for register the listiner
+let ftxWebscoket = new CcxtWebscoket();
+ftxWebscoket.subscribeOrderbook('ftx',symbol)
+
+
 
 function printLog(){
     console.log (exchangeID,new Date (), 
