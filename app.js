@@ -13,14 +13,11 @@ const crypto = require('crypto')
 const { ExchangeError, NetworkError } = ccxtpro
 const APIcredential = require ('./config/credential.json')
 const Calculation =require('./src/strategy/calculation')
-
-
-const symbol = ['ETH-PERP', 'ETH/USD']
-const ftxSymbol = 'ETH-PERP'
-const binanceSymbol = 'ETH/USD'
-const limit = 10;
-
+const TradeModel = require('./src/model/tradeModel')
 const ccxtWebscoket = require('./src/connection/ccxtWebscoket')
+const ccxtWs = new ccxtWebscoket();
+let position={}
+
 
 //Web UI server
 const http = require('http'); // 1 - 載入 Node.js 原生模組 http
@@ -44,9 +41,21 @@ clientWs.on('connection', async function connection(ws) {
             console.log('Get vwap price')
             ws.send(JSON.stringify({action:msg.action,data:Calculation.vwap(msg.exchangeID,msg.instrument,msg.size)}))
         }
-        if(msg.action=='dump_orderbook'){
+        if(msg.action=='get_orderbook'){
             console.log('Dump Orderbook State')
             ws.send(JSON.stringify({action:msg.action,data:orderbook}))
+        }
+        if(msg.action=='get_markets'){
+            console.log('Get avbl markets')
+            ws.send(JSON.stringify({action:msg.action,data:TradeModel.avblMarkets}))
+        }
+        if(msg.action=='get_balances'){
+            console.log('Get balances')
+            ws.send(JSON.stringify({action:msg.action,data:TradeModel.balance}))
+        }
+        if(msg.action=='get_position'){
+            console.log('Get position')
+            ws.send(JSON.stringify({action:msg.action,data:position}))
         }
     })
 })
@@ -61,6 +70,44 @@ function clientSend(data,action){
 
 
 
+let ccxtws = new ccxtWebscoket();
+ccxtws.subscribeOrderbook('binance',"BTC/USDT")
+ccxtws.subscribeOrderbook('ftx',"BTC-PERP")
+ccxtws.subscribeExecution('binance')
+ccxtws.subscribeExecution('ftx')
+ccxtws.subscribeBalance('binance')
+ccxtws.subscribeBalance('ftx')
+ccxtws.getTickers('ftx')
+ccxtws.getTickers('binance')
+ccxtws.registerOrderbookListener(function(event, data) {
+
+});
+ccxtws.registerExecutionListener(function(event, data) {
+ // bind executions to orders
+
+ // if order is monitored, handle position changes
+ 
+ // ping stretegies
+
+});
+
+
+
+function runStretegy(){
+
+}
+
+
+
+
+function printLog(){
+    console.log ( TradeModel.balance)
+    console.log ( TradeModel.orderbook)
+    console.log ( TradeModel.execution)
+}
+
+setInterval(printLog,5 * 1000)
+setInterval(runStretegy, 1000)
 
 
 

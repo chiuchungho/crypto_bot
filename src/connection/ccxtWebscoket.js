@@ -93,7 +93,7 @@ class CcxtWebscoket{
     // balance: [exchangeID]=null,
     // //subscribeBalance('binance')
     async subscribeBalance(exchangeID){
-        if (exchanges[exchangeID].has['watchBalance']) {
+        if (ExchangeWithKey.exchanges[exchangeID].has['watchBalance']) {
             while (true) {
                 TradeModel.balance[exchangeID] = await ExchangeWithKey.exchanges[exchangeID].watchBalance()
                 this.balanceEventCallback(exchangeID)
@@ -123,6 +123,17 @@ class CcxtWebscoket{
     registerBalanceListener(listener) {
         this.emitBalanceMessage = listener;
     }
+
+
+
+    //subscribeTicker('binance','ETH/BTC')
+    async getTickers(exchangeID){
+       
+            let result = await ExchangeWithKey.exchanges[exchangeID].fetchTickers ()
+            TradeModel.avblMarkets[exchangeID] = result
+        
+    }
+
 }
 
 module.exports = CcxtWebscoket;

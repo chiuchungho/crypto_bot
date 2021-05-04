@@ -4,6 +4,11 @@ class TradeModel{
         binance: {}
     };
 
+    static avblMarkets = {
+        ftx:{},
+        binance:{}
+    }
+
     static ticker = {
         ftx: {},
         binance: {}
@@ -19,6 +24,7 @@ class TradeModel{
     static activeOrder = {};
 
     static execution = {};
+    
 
 }
 

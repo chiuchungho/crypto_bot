@@ -14,7 +14,8 @@ class ExchangeWithKey{
             apiKey: APIcredential.binance.apiKey,
             secret: APIcredential.binance.secret,
             enableRateLimit: true,
-            rateLimit: 10
+            rateLimit: 10,
+            options:{'defaultType': 'future'}
         })
     };
 
