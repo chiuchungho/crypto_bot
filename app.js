@@ -69,20 +69,36 @@ function clientSend(data,action){
 }
 
 
-
-let ccxtws = new ccxtWebscoket();
-ccxtws.subscribeOrderbook('binance',"BTC/USDT")
-ccxtws.subscribeOrderbook('ftx',"BTC-PERP")
-ccxtws.subscribeExecution('binance')
-ccxtws.subscribeExecution('ftx')
-ccxtws.subscribeBalance('binance')
-ccxtws.subscribeBalance('ftx')
-ccxtws.getTickers('ftx')
-ccxtws.getTickers('binance')
-ccxtws.registerOrderbookListener(function(event, data) {
+//!!!!!! each ws need to init a new object for listener since each instance only provide one ongoing ws listening. 
+//!!!!!! otherwise 2 listening data get mixed tgt
+//!!!!!!
+let ccxtwsBinance = new ccxtWebscoket();
+ccxtwsBinance.subscribeOrderbook('binance',"BTC/USDT")
+ccxtwsBinance.subscribeExecution('binance')
+ccxtwsBinance.subscribeBalance('binance')
+ccxtwsBinance.getTickers('binance')
+ccxtwsBinance.registerOrderbookListener(function(event, data) {
 
 });
-ccxtws.registerExecutionListener(function(event, data) {
+ccxtwsBinance.registerExecutionListener(function(event, data) {
+ // bind executions to orders
+
+ // if order is monitored, handle position changes
+ 
+ // ping stretegies
+
+});
+
+let ccxtwsFTX = new ccxtWebscoket();
+ccxtwsFTX.subscribeOrderbook('ftx',"BTC-PERP")
+ccxtwsFTX.subscribeExecution('ftx')
+ccxtwsFTX.subscribeBalance('ftx')
+ccxtwsFTX.getTickers('ftx')
+
+ccxtwsFTX.registerOrderbookListener(function(event, data) {
+
+});
+ccxtwsFTX.registerExecutionListener(function(event, data) {
  // bind executions to orders
 
  // if order is monitored, handle position changes
