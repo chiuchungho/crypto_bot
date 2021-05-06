@@ -18,6 +18,10 @@ const ccxtWebscoket = require('./src/connection/ccxtWebscoket')
 const ccxtWs = new ccxtWebscoket();
 let position={}
 
+//Store in Composite Order ID
+let pendingOrders={}
+let activeOrders={}
+let orders={}
 
 //Web UI server
 const http = require('http'); // 1 - 載入 Node.js 原生模組 http
@@ -57,6 +61,22 @@ clientWs.on('connection', async function connection(ws) {
             console.log('Get position')
             ws.send(JSON.stringify({action:msg.action,data:position}))
         }
+        if(msg.action=='submit_order'){
+            console.log('submit order')
+            submitOrder(msg.data.origin,msg.data.exchangeID ,msg.data.symbol,msg.data.type, msg.data.side, msg.data.amount, msg.data.price, msg.data.params)
+        }
+        if(msg.action=='get_orders'){
+            console.log('get_orders')
+            ws.send(JSON.stringify({action:msg.action,data:orders}))
+        }
+        if(msg.action=='get_active_orders'){
+            console.log('active_orders')
+            ws.send(JSON.stringify({action:msg.action,data:activeOrders}))
+        }
+        if(msg.action=='get_pending_orders'){
+            console.log('pending_orders')
+            ws.send(JSON.stringify({action:msg.action,data:pendingOrders}))
+        }
     })
 })
 
@@ -69,62 +89,149 @@ function clientSend(data,action){
 }
 
 
-//!!!!!! each ws need to init a new object for listener since each instance only provide one ongoing ws listening. 
-//!!!!!! otherwise 2 listening data get mixed tgt
-//!!!!!!
-let ccxtwsBinance = new ccxtWebscoket();
-ccxtwsBinance.subscribeOrderbook('binance',"BTC/USDT")
-ccxtwsBinance.subscribeExecution('binance')
-ccxtwsBinance.subscribeBalance('binance')
-ccxtwsBinance.getTickers('binance')
-ccxtwsBinance.registerOrderbookListener(function(event, data) {
 
-});
-ccxtwsBinance.registerExecutionListener(function(event, data) {
+let ccxtws = new ccxtWebscoket();
+ccxtws.subscribeOrderbook('binance',"BTC/USDT")
+ccxtws.subscribeOrderbook('ftx',"BTC-PERP")
+ccxtws.subscribeExecution('binance')
+ccxtws.subscribeExecution('ftx')
+ccxtws.subscribeBalance('binance')
+ccxtws.subscribeBalance('ftx')
+ccxtws.getTickers('ftx')
+ccxtws.getTickers('binance')
+ccxtws.registerOrderbookListener(function(origin,cliOrdID,order) {
+
+}); 
+
+
+ccxtws.registerExecutionListener(function(exchangeID,symbol,exec) {
+    console.log(exchangeID)
+    console.log(symbol)
+    console.log(exec)
+    console.log('=====')
  // bind executions to orders
 
  // if order is monitored, handle position changes
  
- // ping stretegies
+ // ping regarded stretegy
 
 });
 
-let ccxtwsFTX = new ccxtWebscoket();
-ccxtwsFTX.subscribeOrderbook('ftx',"BTC-PERP")
-ccxtwsFTX.subscribeExecution('ftx')
-ccxtwsFTX.subscribeBalance('ftx')
-ccxtwsFTX.getTickers('ftx')
+function submitOrder(origin,exchangeID ,symbol,type, side, amount, price, params) {
+    if(typeof pendingOrders[origin]=='undefined'){
+        pendingOrders[origin]=[];
+        activeOrders[origin]=[]
+    }
+    const cliOrdID=exchangeID+"_"+new Date().getTime();
+    pendingOrders[origin].push(cliOrdID)
+    orders[cliOrdID]={
+        clientOrderId: cliOrdID,
+        status: 'pending',
+        symbol: symbol,
+        type: type,
+        side: side,
+        amount: amount,
+        price: price,
+        origin: origin
+    }
+    ccxtws.submitOrder(origin,exchangeID,symbol,type,side, amount, price,cliOrdID, params)
 
-ccxtwsFTX.registerOrderbookListener(function(event, data) {
+}
 
-});
-ccxtwsFTX.registerExecutionListener(function(event, data) {
- // bind executions to orders
-
- // if order is monitored, handle position changes
- 
- // ping stretegies
-
-});
-
+ccxtws.registerSubmitOrderListener(function(origin,exchangeID,cliOrdID,order) {
+    delete orders[cliOrdID]
+    order.origin=origin
+    orders[composeOrderID(exchangeID,order.id)]=order
+    pendingOrders[origin].pop(cliOrdID)
+    activeOrders[origin].push(composeOrderID(exchangeID,order.id))
+    console.log(activeOrders)
+}); 
 
 
-function runStretegy(){
+function cancelBotOrder(origin){
+    let tempActiveOrders=activeOrders[origin]
+    console.log(tempActiveOrders)
+    if(typeof tempActiveOrders!= "undefined"){
+        for(var i=0; i<tempActiveOrders.length; i++){
+            console.log("cancel order by id")
+            console.log(tempActiveOrders[i],origin)
+            cancelOrderByID(tempActiveOrders[i],origin)
+        }
+    }
+}
+function cancelOrderByID(exchOrderID,origin=null){
+    let orderIDparts=splitOrderID(exchOrderID)
+    if(typeof orders[exchOrderID] != "undefined"){
+        orders[exchOrderID].status="cancelling"
+    }
+    ccxtws.cancelOrder(orderIDparts[0],orderIDparts[1],origin)
+}
 
+ccxtws.registerCancelOrderListener(function(exchangeID, rawOrderID, result,origin=null) {
+    console.log(result)
+   if(origin==null){
+    //Find order origin
+        try{
+            if(typeof orders[composeOrderID(exchangeID,rawOrderID)]!='undefined'){
+                origin = orders[composeOrderID(exchangeID,rawOrderID)].origin
+            }
+        }catch(e){}
+        
+   }
+   //remove from activeorder[origin]
+   try{
+     activeOrders[origin].pop(composeOrderID(exchangeID,rawOrderID))
+    }catch(e){}
+   //Archive orders[ID] state to database
+   
+   //Delete orders[ID]
+   try{
+    delete orders[composeOrderID(exchangeID,rawOrderID)]
+    }catch(e){}
+   
+
+}); 
+
+function composeOrderID(exchangeID,rawOrderID){
+    return exchangeID+"_"+rawOrderID
+}
+function splitOrderID(exchOrderID){
+    return exchOrderID.split(/_(.+)/)
+}
+let countdown=3
+let count = 0;
+function runMainStretegy(){
+    
+    let price = 50000;
+
+    countdown--;
+    console.log(countdown)
+    if(countdown == 0){
+        console.log('bot1')
+        countdown=3;
+        count++;
+        cancelBotOrder('bot1')
+        submitOrder('bot1','ftx','BTC-PERP','limit','buy','0.01',price+count)
+    }
+    
+}
+
+function runCallbackStretegy(){
+
+    
 }
 
 
 
 
 function printLog(){
-    console.log ( TradeModel.balance)
-    console.log ( TradeModel.orderbook)
-    console.log ( TradeModel.execution)
+    //console.log ( TradeModel.balance)
+    //console.log ( TradeModel.orderbook)
+    //console.log ( TradeModel.execution)
 }
 
 setInterval(printLog,5 * 1000)
-setInterval(runStretegy, 1000)
-
+setInterval(runMainStretegy, 1000)
 
 
 

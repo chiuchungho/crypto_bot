@@ -23,7 +23,7 @@ class TradeModel{
 
     static activeOrder = {};
 
-    static execution = {};
+    static execution = [];
     
 
 }
