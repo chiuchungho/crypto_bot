@@ -23,6 +23,11 @@ let pendingOrders={}
 let activeOrders={}
 let orders={}
 
+//Exotic pairs exposure definition
+let exoticPairDef={
+    
+}
+
 //Web UI server
 const http = require('http'); // 1 - 載入 Node.js 原生模組 http
 const server = http.createServer(function (req, res) {   // 2 - 建立server
@@ -109,13 +114,56 @@ ccxtws.registerExecutionListener(function(exchangeID,symbol,exec) {
     console.log(symbol)
     console.log(exec)
     console.log('=====')
+    let compID=composeOrderID(exchangeID,exec.info.orderId)
  // bind executions to orders
-
+    let originID=getOriginByComplexID(compID)
  // if order is monitored, handle position changes
- 
- // ping regarded stretegy
+    if(originID){
+        console.log('fill matched')
+        console.log(originID)
+        //position change
+
+        //log trade
+
+        //check if order fully executed, cancel activeOrder if done
+
+         // ping regarded stretegy
+
+    }
 
 });
+
+function getProductExposureSet(exchangeID,symbol){
+    var exposureSet={};
+    if(exchangeID=='ftx'&&symbol.indexOf('-PERP')!=-1){
+        exposureSet['USDC']=-1
+        exposureSet[symbol.replace('-PERP','')]=1
+        return exposureSet
+    }
+    if(symbol.indexOf('/')!=-1){
+        exposureSet[symbol.split('/')[0]]=1;
+        exposureSet[symbol.split('/')[1]]=-1;
+        return exposureSet
+    }
+    //exotic pair handling
+
+    //return error
+
+}
+
+function positionChange(origin,exchangeID,symbol,size){
+
+
+}
+
+function getOriginByComplexID(compID){
+    for(var k in activeOrders){
+        if(compID.indexOf(activeOrders[k]!=-1)){
+            return k
+        }
+    }
+    return null
+}
 
 function submitOrder(origin,exchangeID ,symbol,type, side, amount, price, params) {
     if(typeof pendingOrders[origin]=='undefined'){
@@ -198,12 +246,18 @@ function composeOrderID(exchangeID,rawOrderID){
 function splitOrderID(exchOrderID){
     return exchOrderID.split(/_(.+)/)
 }
+
+
 let countdown=3
 let count = 0;
+let stretegyActive=true;
 function runMainStretegy(){
-    
-    let price = 50000;
+    //Stop stretegy running if state is not active
+    if(stretegyActive == false){
+        return false;
+    }
 
+    let price = 39000;
     countdown--;
     console.log(countdown)
     if(countdown == 0){
@@ -211,7 +265,7 @@ function runMainStretegy(){
         countdown=3;
         count++;
         cancelBotOrder('bot1')
-        submitOrder('bot1','ftx','BTC-PERP','limit','buy','0.01',price+count)
+        submitOrder('bot1','ftx','BTC-PERP','limit','buy','0.001',price+count)
     }
     
 }

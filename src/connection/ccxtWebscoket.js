@@ -67,9 +67,10 @@ class CcxtWebscoket{
     async subscribeExecution(exchangeID,symbol){
         while (true) {
             let exec = await ExchangeWithKey.exchanges[exchangeID].watchMyTrades(symbol)
+            exec=exec[exec.length-1]
             exec.exchangeID=exchangeID
             TradeModel.execution.push(exec)
-            this.executionEventCallback(exchangeID,symbol,exec)
+            this.executionEventCallback(exchangeID,exec.symbol,exec)
             //console.log (new Date (), exec)
         }
     }
