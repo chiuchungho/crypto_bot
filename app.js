@@ -53,41 +53,36 @@ clientWs.on('connection', async function connection(ws) {
         console.log('received');
         console.log(msg)
 
-        if(msg.action=='vwap'){
-            console.log('Get vwap price')
-            ws.send(JSON.stringify({action:msg.action,data:Calculation.vwap(msg.exchangeID,msg.instrument,msg.size)}))
-        }
-        if(msg.action=='get_orderbook'){
-            console.log('Dump Orderbook State')
-            ws.send(JSON.stringify({action:msg.action,data:orderbook}))
-        }
-        if(msg.action=='get_markets'){
-            console.log('Get avbl markets')
-            ws.send(JSON.stringify({action:msg.action,data:TradeModel.avblMarkets}))
-        }
-        if(msg.action=='get_balances'){
-            console.log('Get balances')
-            ws.send(JSON.stringify({action:msg.action,data:TradeModel.balance}))
-        }
-        if(msg.action=='get_position'){
-            console.log('Get position')
-            ws.send(JSON.stringify({action:msg.action,data:position}))
-        }
-        if(msg.action=='submit_order'){
-            console.log('submit order')
-            submitOrder(msg.data.origin,msg.data.exchangeID ,msg.data.symbol,msg.data.type, msg.data.side, msg.data.amount, msg.data.price, msg.data.params)
-        }
-        if(msg.action=='get_orders'){
-            console.log('get_orders')
-            ws.send(JSON.stringify({action:msg.action,data:orders}))
-        }
-        if(msg.action=='get_active_orders'){
-            console.log('active_orders')
-            ws.send(JSON.stringify({action:msg.action,data:activeOrders}))
-        }
-        if(msg.action=='get_pending_orders'){
-            console.log('pending_orders')
-            ws.send(JSON.stringify({action:msg.action,data:pendingOrders}))
+        switch(msg.action) {
+            case 'vwap': 
+                console.log('Get vwap price')
+                ws.send(JSON.stringify({action:msg.action,data:Calculation.vwap(msg.exchangeID,msg.instrument,msg.size)}))
+            case 'get_orderbook':
+                console.log('Dump Orderbook State')
+                ws.send(JSON.stringify({action:msg.action,data:orderbook}))
+            case 'get_markets':
+                console.log('Get avbl markets')
+                ws.send(JSON.stringify({action:msg.action,data:TradeModel.avblMarkets}))
+            case 'get_balances':
+                console.log('Get balances')
+                ws.send(JSON.stringify({action:msg.action,data:TradeModel.balance}))
+            case 'get_position':
+                console.log('Get position')
+                ws.send(JSON.stringify({action:msg.action,data:position}))
+            case 'submit_order':
+                console.log('submit order')
+                submitOrder(msg.data.origin,msg.data.exchangeID ,msg.data.symbol,msg.data.type, msg.data.side, msg.data.amount, msg.data.price, msg.data.params)
+            case 'get_orders':
+                console.log('get_orders')
+                ws.send(JSON.stringify({action:msg.action,data:orders}))
+            case 'get_active_orders':
+                console.log('active_orders')
+                ws.send(JSON.stringify({action:msg.action,data:activeOrders}))
+            case 'get_pending_orders':
+                if(msg.action=='get_pending_orders'){
+                    console.log('pending_orders')
+                    ws.send(JSON.stringify({action:msg.action,data:pendingOrders}))
+                }
         }
     })
 })
@@ -301,7 +296,7 @@ function printLog(){
 }
 
 setInterval(printLog,5 * 1000)
-setInterval(runMainStretegy, 1000)
+// setInterval(runMainStretegy, 1000)
 
 
 
