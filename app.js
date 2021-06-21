@@ -7,6 +7,13 @@ const fs    = require('fs')
 const path  = require('path')
 const ansi  = require ('ansicolor').nice
 const sqlite3 = require('sqlite3').verbose();
+let db = new sqlite3.Database('./db/state_log.sqlite3', (err) => {
+    if (err) {
+      console.error(err.message);
+    }
+    console.log('Connected to the database.');
+    db.run("INSERT INTO bot_event_log VALUES (?,?,?)",[new Date().getTime(), "Bot Startup", ""]);
+  });
 const open  = require('open')
 const WebSocket    = require('ws')
 const crypto = require('crypto')
@@ -115,8 +122,12 @@ ccxtws.registerExecutionListener(function(exchangeID,symbol,exec) {
     console.log(exec)
     console.log('=====')
     let compID=composeOrderID(exchangeID,exec.info.orderId)
- // bind executions to orders
+    // bind executions to orders
     let originID=getOriginByComplexID(compID)
+    //log execution to database
+    db.run("INSERT INTO execution VALUES (?,?,?,?,?,?,?,?,?,?,?)",[null,new Date().getTime(), symbol, exchangeID, exec.info.orderId, exec.info.tradeId, exec.side, exec.amount, originID, exec.price,exec.fee.cost ]);
+
+
  // if order is monitored, handle position changes
     if(originID){
         console.log('fill matched')
@@ -127,7 +138,7 @@ ccxtws.registerExecutionListener(function(exchangeID,symbol,exec) {
 
         //check if order fully executed, cancel activeOrder if done
 
-         // ping regarded stretegy
+        // ping regarded stretegy
 
     }
 
@@ -192,6 +203,9 @@ ccxtws.registerSubmitOrderListener(function(origin,exchangeID,cliOrdID,order) {
     orders[composeOrderID(exchangeID,order.id)]=order
     pendingOrders[origin].pop(cliOrdID)
     activeOrders[origin].push(composeOrderID(exchangeID,order.id))
+    //Order Creation Log
+    db.run("INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?)",[null,exchangeID,order.side,order.price,order.amount,order.id,order.status,new Date().getTime(),origin]);
+
     console.log(activeOrders)
 }); 
 
@@ -217,6 +231,8 @@ function cancelOrderByID(exchOrderID,origin=null){
 
 ccxtws.registerCancelOrderListener(function(exchangeID, rawOrderID, result,origin=null) {
     console.log(result)
+    db.run("UPDATE orders SET order_status='cancelled' WHERE order_id=?",[rawOrderID]);
+
    if(origin==null){
     //Find order origin
         try{
@@ -257,7 +273,7 @@ function runMainStretegy(){
         return false;
     }
 
-    let price = 39000;
+    let price = 34000;
     countdown--;
     console.log(countdown)
     if(countdown == 0){
